@@ -1,0 +1,30 @@
+{
+  "name": "ledgerguard-server",
+  "version": "1.0.0",
+  "description": "LedgerGuard - Dynamic Multi-Tenant Billing Engine (Backend)",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "multi-tenant",
+    "billing",
+    "ledger",
+    "idempotency",
+    "redis",
+    "mongodb"
+  ],
+  "author": "LedgerGuard Team",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ioredis": "^5.4.2",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.10.0"
+  }
+}
