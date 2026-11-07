@@ -20,6 +20,7 @@ Technology Stack
 - Database: MongoDB, Mongoose
 - Cache and Distributed Locks: Redis
 - Authentication: JWT
+- Tools: VScode and Postman
 - Cryptography: RSA signatures with SHA-256 (subject to mentor confirmation)
 
 Project Structure
