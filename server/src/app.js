@@ -5,6 +5,7 @@ import invoiceRoutes from './routes/invoiceRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import ledgerRoutes from './routes/ledgerRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import customerRoutes from './routes/customerRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -48,6 +49,8 @@ app.use('/api/v1/invoices', invoiceRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/ledger', ledgerRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
+// Member 2 - Customer Management
+app.use('/api/v1/customers', customerRoutes);
 
 // 404 Handler for undefined routes
 app.use((req, res, next) => {

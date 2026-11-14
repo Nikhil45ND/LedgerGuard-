@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import { updateInvoiceStatus, createInvoice } from '../src/services/billingService.js';
 import { Invoice } from '../src/models/Invoice.js';
+import { Customer } from '../src/models/Customer.js';
 
 describe('Billing Service (services/billingService.js)', () => {
 
@@ -61,5 +62,87 @@ describe('Billing Service (services/billingService.js)', () => {
       Invoice.findOne = originalFindOne;
     }
   });
+  test('rejects invoice creation when customer belongs to another tenant', async () => {
+  const originalFindOne = Customer.findOne;
+
+  try {
+    // Simulate customer lookup returning no match for this tenant.
+    Customer.findOne = async (query) => {
+      assert.equal(query.tenantId, dummyTenantId);
+      return null;
+    };
+
+    await assert.rejects(
+      async () => {
+        await createInvoice({
+          tenantId: dummyTenantId,
+          customerId: new mongoose.Types.ObjectId(),
+          customerName: 'Other Tenant Customer',
+          customerEmail: 'other@example.com',
+          dueDate: new Date(),
+          items: [
+            { description: 'Test item', quantity: 1, unitPrice: 100 }
+          ]
+        });
+      },
+      /Customer not found for this tenant/
+    );
+  } finally {
+    Customer.findOne = originalFindOne;
+  }
+});
+test('creates an invoice when customer belongs to the same tenant', async () => {
+  const originalCustomerFindOne = Customer.findOne;
+  const originalInvoiceFindOne = Invoice.findOne;
+  const originalInvoiceSave = Invoice.prototype.save;
+  const originalLedgerCreate = (await import('../src/models/LedgerEntry.js')).LedgerEntry.create;
+
+  try {
+    Customer.findOne = async (query) => {
+      assert.equal(query.tenantId, dummyTenantId);
+      return {
+        _id: query._id,
+        tenantId: dummyTenantId,
+        name: 'Acme Customer',
+        email: 'acme@example.com'
+      };
+    };
+
+    Invoice.findOne = () => ({
+      sort: async () => null
+    });
+
+    Invoice.prototype.save = async function () {
+      this._id = new mongoose.Types.ObjectId();
+      return this;
+    };
+
+    const { LedgerEntry } = await import('../src/models/LedgerEntry.js');
+    LedgerEntry.create = async () => ({});
+
+    const invoice = await createInvoice({
+      tenantId: dummyTenantId,
+      customerId: new mongoose.Types.ObjectId(),
+      customerName: 'Acme Customer',
+      customerEmail: 'acme@example.com',
+      dueDate: new Date(),
+      items: [
+        { description: 'Development Service', quantity: 2, unitPrice: 5000 }
+      ],
+      currency: 'INR'
+    });
+
+    assert.equal(invoice.tenantId, dummyTenantId);
+    assert.equal(invoice.subtotal, 10000);
+    assert.equal(invoice.total, 10000);
+  } finally {
+    Customer.findOne = originalCustomerFindOne;
+    Invoice.findOne = originalInvoiceFindOne;
+    Invoice.prototype.save = originalInvoiceSave;
+
+    const { LedgerEntry } = await import('../src/models/LedgerEntry.js');
+    LedgerEntry.create = originalLedgerCreate;
+  }
+});
 
 });
