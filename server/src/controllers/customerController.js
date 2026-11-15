@@ -2,10 +2,6 @@
 import mongoose from 'mongoose';
 import { Customer } from '../models/Customer.js';
 
-/**
- * POST /api/v1/customers
- * Create a customer for the current tenant
- */
 export async function createCustomer(req, res, next) {
   try {
     const { name, email, phone, company, address } = req.body;
@@ -26,56 +22,54 @@ export async function createCustomer(req, res, next) {
       address
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Customer created successfully',
-      customer
+      customer,
+      data: customer
     });
-  } catch (err) {
-    if (err.code === 11000) {
+  } catch (error) {
+    if (error.code === 11000) {
       return res.status(409).json({
         success: false,
         message: 'Customer email already exists for this tenant'
       });
     }
-    next(err);
+    next(error);
   }
 }
 
-/**
- * GET /api/v1/customers
- * List customers belonging to the current tenant
- */
 export async function getCustomers(req, res, next) {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
     const filter = { tenantId: req.tenantId };
 
-    if (status) filter.status = status;
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
 
     const customers = await Customer.find(filter)
       .sort({ createdAt: -1 })
-      .skip((Number(page) - 1) * Number(limit))
-      .limit(Math.min(Number(limit), 100));
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     const total = await Customer.countDocuments(filter);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       customers,
+      data: customers,
+      count: customers.length,
       total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit))
+      page,
+      pages: Math.ceil(total / limit)
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 }
 
-/**
- * GET /api/v1/customers/:id
- * Retrieve a customer belonging to the current tenant
- */
 export async function getCustomerById(req, res, next) {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -97,16 +91,16 @@ export async function getCustomerById(req, res, next) {
       });
     }
 
-    res.status(200).json({ success: true, customer });
-  } catch (err) {
-    next(err);
+    return res.status(200).json({
+      success: true,
+      customer,
+      data: customer
+    });
+  } catch (error) {
+    next(error);
   }
 }
 
-/**
- * PUT /api/v1/customers/:id
- * Update a customer belonging to the current tenant
- */
 export async function updateCustomer(req, res, next) {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -116,7 +110,15 @@ export async function updateCustomer(req, res, next) {
       });
     }
 
-    const allowedFields = ['name', 'email', 'phone', 'company', 'address', 'status'];
+    const allowedFields = [
+      'name',
+      'email',
+      'phone',
+      'company',
+      'address',
+      'status'
+    ];
+
     const updates = {};
 
     for (const field of allowedFields) {
@@ -125,10 +127,30 @@ export async function updateCustomer(req, res, next) {
       }
     }
 
+    if (updates.name !== undefined && !updates.name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customer name cannot be empty'
+      });
+    }
+
+    if (updates.email !== undefined && !updates.email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customer email cannot be empty'
+      });
+    }
+
     const customer = await Customer.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.tenantId },
+      {
+        _id: req.params.id,
+        tenantId: req.tenantId
+      },
       { $set: updates },
-      { new: true, runValidators: true }
+      {
+        new: true,
+        runValidators: true
+      }
     );
 
     if (!customer) {
@@ -138,26 +160,62 @@ export async function updateCustomer(req, res, next) {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Customer updated successfully',
-      customer
+      customer,
+      data: customer
     });
-  } catch (err) {
-    if (err.code === 11000) {
+  } catch (error) {
+    if (error.code === 11000) {
       return res.status(409).json({
         success: false,
         message: 'Customer email already exists for this tenant'
       });
     }
-    next(err);
+    next(error);
   }
 }
 
-/**
- * DELETE /api/v1/customers/:id
- * Delete a customer belonging to the current tenant
- */
+export async function deactivateCustomer(req, res, next) {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid customer ID'
+      });
+    }
+
+    const customer = await Customer.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        tenantId: req.tenantId
+      },
+      { $set: { status: 'inactive' } },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Customer not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Customer deactivated successfully',
+      customer,
+      data: customer
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function deleteCustomer(req, res, next) {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -179,11 +237,11 @@ export async function deleteCustomer(req, res, next) {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Customer deleted successfully'
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 }

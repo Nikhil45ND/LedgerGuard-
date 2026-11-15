@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
+import { Customer } from '../models/Customer.js';
 import { Invoice } from '../models/Invoice.js';
 import { LedgerEntry } from '../models/LedgerEntry.js';
 import { calculateInvoiceTotals } from '../utils/money.js';
-import { Customer } from '../models/Customer.js';
 
 /**
  * Generates the next sequential invoice number for a tenant
@@ -48,21 +48,23 @@ export async function createInvoice({
   if (!tenantId) throw new Error('Tenant ID is required for invoice creation');
   if (!customerId) throw new Error('Customer ID is required');
   if (!dueDate) throw new Error('Invoice due date is required');
+    // Verify that the customer belongs to the requesting tenant
+  const customer = await Customer.findOne({
+    _id: customerId,
+    tenantId
+  });
 
-  // Verify that the customer belongs to the requesting tenant.
-const customer = await Customer.findOne({
-  _id: customerId,
-  tenantId
-});
-
-if (!customer) {
-  const error = new Error('Customer not found for this tenant');
-  error.statusCode = 404;
-  throw error;
-}
+  if (!customer) {
+    const error = new Error(
+      'Customer not found or does not belong to this tenant'
+    );
+    error.statusCode = 404;
+    throw error;
+  }
 
   // Compute minor-unit totals safely
-  const { itemsWithTotals, subtotal, tax, total } = calculateInvoiceTotals(items, taxRatePercent);
+  const { itemsWithTotals, subtotal, tax, total } =
+    calculateInvoiceTotals(items, taxRatePercent);
 
   // Generate unique sequential invoice number
   const invoiceNumber = await generateInvoiceNumber(tenantId);
@@ -72,8 +74,8 @@ if (!customer) {
     tenantId,
     invoiceNumber,
     customerId,
-    customerName,
-    customerEmail,
+    customerName: customer.name,
+    customerEmail: customer.email,
     items: itemsWithTotals,
     subtotal,
     taxRatePercent,
@@ -85,7 +87,6 @@ if (!customer) {
     notes,
     createdBy
   });
-
   const savedInvoice = await invoice.save();
 
   // Create initial ledger audit record
