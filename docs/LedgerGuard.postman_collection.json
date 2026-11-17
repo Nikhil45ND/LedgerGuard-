@@ -1,0 +1,98 @@
+{
+  "info": {
+    "name": "LedgerGuard Billing Engine APIs",
+    "description": "Postman API Collection for testing LedgerGuard multi-tenant billing engine, idempotency, and ledger operations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Create Invoice",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-tenant-id", "value": "654321654321654321654321" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"654321654321654321654322\",\n  \"customerName\": \"Acme Corp\",\n  \"customerEmail\": \"billing@acme.com\",\n  \"items\": [\n    {\n      \"description\": \"Enterprise Subscription\",\n      \"quantity\": 1,\n      \"unitPrice\": 5000\n    }\n  ],\n  \"taxRatePercent\": 10,\n  \"currency\": \"USD\",\n  \"dueDate\": \"2026-12-01\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/invoices",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "invoices"]
+        }
+      }
+    },
+    {
+      "name": "Process Payment (Idempotent)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-tenant-id", "value": "654321654321654321654321" },
+          { "key": "Idempotency-Key", "value": "unique-uuid-demo-1234" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoiceId\": \"<INVOICE_ID>\",\n  \"amount\": 5500,\n  \"currency\": \"USD\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/payments",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "payments"]
+        }
+      }
+    },
+    {
+      "name": "Get Audit Ledger",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "x-tenant-id", "value": "654321654321654321654321" }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/ledger",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "ledger"]
+        }
+      }
+    },
+    {
+      "name": "Get Dashboard Summary KPIs",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "x-tenant-id", "value": "654321654321654321654321" }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/dashboard/summary",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "dashboard", "summary"]
+        }
+      }
+    }
+  ]
+}
