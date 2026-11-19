@@ -43,6 +43,22 @@ function Transactions() {
     },
   ]
 
+  // Calculate transaction summary
+  const totalTransactions = transactions.length
+
+  const completedTransactions = transactions.filter(
+    (item) => item.status === 'Completed'
+  ).length
+
+  const pendingTransactions = transactions.filter(
+    (item) => item.status === 'Pending'
+  ).length
+
+  const failedTransactions = transactions.filter(
+    (item) => item.status === 'Failed'
+  ).length
+
+  // Search and filter transactions
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
       transaction.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -56,6 +72,8 @@ function Transactions() {
 
   return (
     <div className="space-y-6">
+
+      {/* Page Heading */}
       <div>
         <h1 className="text-2xl font-bold text-gray-800">
           Transactions
@@ -65,6 +83,40 @@ function Transactions() {
         </p>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200">
+          <p className="text-gray-500 text-sm">Total Transactions</p>
+          <h2 className="text-2xl font-bold text-purple-700 mt-2">
+            {totalTransactions}
+          </h2>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200">
+          <p className="text-gray-500 text-sm">Completed</p>
+          <h2 className="text-2xl font-bold text-green-600 mt-2">
+            {completedTransactions}
+          </h2>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200">
+          <p className="text-gray-500 text-sm">Pending</p>
+          <h2 className="text-2xl font-bold text-yellow-600 mt-2">
+            {pendingTransactions}
+          </h2>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200">
+          <p className="text-gray-500 text-sm">Failed</p>
+          <h2 className="text-2xl font-bold text-red-600 mt-2">
+            {failedTransactions}
+          </h2>
+        </div>
+
+      </div>
+
+      {/* Search and Filter */}
       <div className="flex flex-col md:flex-row gap-4">
         <input
           type="text"
@@ -86,6 +138,7 @@ function Transactions() {
         </select>
       </div>
 
+      {/* Transactions Table */}
       <div className="overflow-x-auto bg-white rounded-xl border border-gray-200">
         <table className="w-full text-left">
           <thead className="bg-gray-100">
@@ -133,6 +186,7 @@ function Transactions() {
           </tbody>
         </table>
       </div>
+
     </div>
   )
 }
