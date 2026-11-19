@@ -11,7 +11,20 @@ function Customers() {
     { id: 3, name: 'Arjun Kumar', email: 'arjun@gmail.com', status: 'Inactive' },
     { id: 4, name: 'Sneha Rao', email: 'sneha@gmail.com', status: 'Active' },
     { id: 5, name: 'Kiran Kumar', email: 'kiran@gmail.com', status: 'Inactive' },
+    { id: 6, name: 'Ananya Gupta', email: 'ananya@gmail.com', status: 'Active' },
+    { id: 7, name: 'Vikram Reddy', email: 'vikram@gmail.com', status: 'Active' },
+    { id: 8, name: 'Meena Sharma', email: 'meena@gmail.com', status: 'Inactive' },
+    { id: 9, name: 'Rohit Verma', email: 'rohit@gmail.com', status: 'Active' },
+    { id: 10, name: 'Divya Rao', email: 'divya@gmail.com', status: 'Inactive' },
   ]
+
+  const totalCustomers = customers.length
+  const activeCustomers = customers.filter(
+    (customer) => customer.status === 'Active'
+  ).length
+  const inactiveCustomers = customers.filter(
+    (customer) => customer.status === 'Inactive'
+  ).length
 
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch =
@@ -31,6 +44,29 @@ function Customers() {
         <p className="mt-2 text-gray-500">
           Manage your LedgerGuard customers here.
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <p className="text-sm text-gray-500">Total Customers</p>
+          <h2 className="mt-2 text-2xl font-bold text-gray-800">
+            {totalCustomers}
+          </h2>
+        </div>
+
+        <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <p className="text-sm text-gray-500">Active Customers</p>
+          <h2 className="mt-2 text-2xl font-bold text-green-600">
+            {activeCustomers}
+          </h2>
+        </div>
+
+        <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <p className="text-sm text-gray-500">Inactive Customers</p>
+          <h2 className="mt-2 text-2xl font-bold text-gray-600">
+            {inactiveCustomers}
+          </h2>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4">
@@ -72,11 +108,13 @@ function Customers() {
                   <td className="p-4 font-medium">{customer.name}</td>
                   <td className="p-4 text-gray-500">{customer.email}</td>
                   <td className="p-4">
-                    <span className={`rounded-full px-3 py-1 text-xs ${
-                      customer.status === 'Active'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs ${
+                        customer.status === 'Active'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
                       {customer.status}
                     </span>
                   </td>
