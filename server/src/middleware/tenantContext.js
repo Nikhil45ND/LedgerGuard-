@@ -12,12 +12,16 @@ export function extractTenantContext(req, res, next) {
   let rawTenantId = req.user?.tenantId || req.tenant?._id || req.tenant?.id;
 
   // 2. From header (for development & API integration testing)
-  if (!rawTenantId && req.headers['x-tenant-id']) {
-    rawTenantId = req.headers['x-tenant-id'];
-  }
+  if (
+  !rawTenantId &&
+  process.env.NODE_ENV !== 'production' &&
+  req.headers['x-tenant-id']
+) {
+  rawTenantId = req.headers['x-tenant-id'];
+}
 
   // 3. Fallback for local initial bootstrap / dev if none provided
-  if (!rawTenantId && process.env.NODE_ENV !== 'production') {
+  if (!rawTenantId && process.env.NODE_ENV === 'development') {
     // Default development tenant ID
     rawTenantId = '654321654321654321654321';
   }

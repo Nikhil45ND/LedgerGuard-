@@ -1,6 +1,9 @@
+
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+
+import customerRoutes from './routes/customerRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import ledgerRoutes from './routes/ledgerRoutes.js';
@@ -29,7 +32,8 @@ app.get('/', (req, res) => {
       invoices: 'GET, POST /api/v1/invoices',
       payments: 'POST /api/v1/payments (Requires Idempotency-Key)',
       ledger: 'GET /api/v1/ledger',
-      dashboard: 'GET /api/v1/dashboard/summary'
+      dashboard: 'GET /api/v1/dashboard/summary',
+      customers: 'GET, POST /api/v1/customers'
     }
   });
 });
@@ -43,13 +47,16 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Financial & Billing API Routes (Member 3 Core Workstream)
+// Financial and billing API routes
 app.use('/api/v1/invoices', invoiceRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/ledger', ledgerRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 
-// 404 Handler for undefined routes
+// Member 2 - Customer Management
+app.use('/api/v1/customers', customerRoutes);
+
+// 404 Handler
 app.use((req, res, next) => {
   res.status(404).json({
     success: false,
