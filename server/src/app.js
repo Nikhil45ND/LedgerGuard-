@@ -1,0 +1,62 @@
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import invoiceRoutes from './routes/invoiceRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import ledgerRoutes from './routes/ledgerRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import authRoutes from "./routes/authRoutes.js";
+import onboardingRoutes from "./routes/onboardingRoutes.js";
+
+const app = express();
+
+// Standard middlewares
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Idempotency-Key',
+    'X-Request-Signature',
+    'X-Request-Timestamp'
+  ]
+}));
+app.use(express.json());
+
+// Request logging in non-test mode
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    service: 'LedgerGuard Dynamic Multi-Tenant Billing Engine',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Financial & Billing API Routes (Member 3 Core Workstream)
+app.use('/api/v1/invoices', invoiceRoutes);
+app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/ledger', ledgerRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/onboarding", onboardingRoutes);
+
+// 404 Handler for undefined routes
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    error: `Route not found: ${req.method} ${req.originalUrl}`
+  });
+});
+
+// Centralized error handler
+app.use(errorHandler);
+
+export default app;
