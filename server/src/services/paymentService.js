@@ -49,6 +49,9 @@ export async function processPayment({
   }
 
   try {
+    const idempotency = await checkIdempotency(tenantId, idempotencyKey, 'PROCESS_PAYMENT', payload);
+
+    if (idempotency.state === 'REPLAY') {
     // 2. Check Idempotency Status
     const idempotency = await checkIdempotency(tenantId, idempotencyKey, 'PROCESS_PAYMENT', payload);
 
@@ -72,6 +75,8 @@ export async function processPayment({
       err.statusCode = 422;
       throw err;
     }
+
+    await markAsProcessing(tenantId, idempotencyKey, 'PROCESS_PAYMENT', idempotency.requestHash);
 
     // Mark key as currently processing in DB
     await markAsProcessing(tenantId, idempotencyKey, 'PROCESS_PAYMENT', idempotency.requestHash);
@@ -109,6 +114,13 @@ export async function processPayment({
       throw err;
     }
 
+    const transactionId = `TXN-PAY-${Date.now()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+    const paidAt = new Date();
+
+    const session = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
     // 4. Atomic Execution: Update Invoice & Append to Ledger
     const transactionId = `TXN-PAY-${Date.now()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
     const paidAt = new Date();
@@ -179,6 +191,9 @@ export async function processPayment({
     }
 
   } catch (err) {
+    await markAsFailed(tenantId, idempotencyKey, err).catch(() => {});
+    throw err;
+  } finally {
     // Record failure in idempotency record so user can retry safely
     await markAsFailed(tenantId, idempotencyKey, err).catch(() => {});
     throw err;

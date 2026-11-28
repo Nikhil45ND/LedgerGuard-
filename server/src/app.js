@@ -6,10 +6,31 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import ledgerRoutes from './routes/ledgerRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import authRoutes from "./routes/authRoutes.js";
+import onboardingRoutes from "./routes/onboardingRoutes.js";
 
 const app = express();
 
 // Standard middlewares
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Idempotency-Key',
+    'X-Request-Signature',
+    'X-Request-Timestamp'
+  ]
+}));
+app.use(express.json());
+
+// Request logging in non-test mode
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 app.use(cors());
 app.use(express.json());
 
@@ -48,6 +69,8 @@ app.use('/api/v1/invoices', invoiceRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/ledger', ledgerRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/onboarding", onboardingRoutes);
 
 // 404 Handler for undefined routes
 app.use((req, res, next) => {

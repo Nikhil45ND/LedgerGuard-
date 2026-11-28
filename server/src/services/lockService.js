@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
 import { getRedisClient } from '../config/redis.js';
 
+const inMemoryLocks = new Map();
+
 // In-memory fallback lock map for environments without an active Redis instance
 const inMemoryLocks = new Map();
 

@@ -1,3 +1,12 @@
+import mongoose from "mongoose";
+
+export async function connectDB() {
+  const uri = process.env.MONGODB_URI;
+
+  if (!uri) {
+    throw new Error("MONGODB_URI is not configured");
+  }
+
 import mongoose from 'mongoose';
 
 /**
@@ -13,6 +22,22 @@ export async function connectDB() {
       socketTimeoutMS: 45000,
     });
 
+    console.log(
+      `[MongoDB] Connected: ${conn.connection.host}`
+    );
+
+    console.log(
+      `[MongoDB] Database: ${conn.connection.name}`
+    );
+
+    console.log(
+      `[MongoDB] Topology: ${mongoose.connection.client.topology.description.type}`
+    );
+
+    return conn;
+  } catch (error) {
+    console.error("[MongoDB] Connection failed:", error.message);
+    throw error;
     console.log(`[MongoDB] Connected successfully to host: ${conn.connection.host}, database: ${conn.connection.name}`);
     return conn;
   } catch (err) {
@@ -24,4 +49,5 @@ export async function connectDB() {
 
 export async function disconnectDB() {
   await mongoose.disconnect();
+}
 }

@@ -14,6 +14,12 @@ async function bootstrap() {
   await connectDB();
 
   // Initialize Redis coordination (with automatic fallback)
+ const redis = getRedisClient();
+
+console.log(
+  '[Redis] Status:',
+  redis.client?.status || 'Not configured'
+);
   getRedisClient();
 
   app.listen(PORT, () => {
