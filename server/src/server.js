@@ -20,6 +20,7 @@ console.log(
   '[Redis] Status:',
   redis.client?.status || 'Not configured'
 );
+  getRedisClient();
 
   app.listen(PORT, () => {
     console.log(`[Server] LedgerGuard Billing Engine running on http://localhost:${PORT}`);

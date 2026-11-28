@@ -31,6 +31,30 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
+app.use(cors());
+app.use(express.json());
+
+// Request logging in non-test mode
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('dev'));
+}
+
+// Root welcome endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'LedgerGuard Dynamic Multi-Tenant Billing Engine API',
+    version: '1.0.0',
+    status: 'online',
+    endpoints: {
+      health: 'GET /health',
+      invoices: 'GET, POST /api/v1/invoices',
+      payments: 'POST /api/v1/payments (Requires Idempotency-Key)',
+      ledger: 'GET /api/v1/ledger',
+      dashboard: 'GET /api/v1/dashboard/summary'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({

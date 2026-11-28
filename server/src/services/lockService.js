@@ -3,6 +3,10 @@ import { getRedisClient } from '../config/redis.js';
 
 const inMemoryLocks = new Map();
 
+// In-memory fallback lock map for environments without an active Redis instance
+const inMemoryLocks = new Map();
+
+// Lua script to safely release Redis lock only if the token matches
 const RELEASE_LOCK_LUA = `
 if redis.call("get", KEYS[1]) == ARGV[1] then
   return redis.call("del", KEYS[1])
@@ -12,6 +16,7 @@ end
 `;
 
 /**
+ * Acquires a distributed lock using Redis (with seamless in-memory fallback)
  * @param {string} lockKey - Unique identifier for the locked resource
  * @param {number} ttlMs - Lock time-to-live in milliseconds (default: 5000ms)
  * @returns {Promise<{ acquired: boolean, token: string|null, release: Function }>}
